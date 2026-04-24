@@ -1,16 +1,14 @@
-
-export type AnimationType = 'fade-in' | 'slide-left' | 'draw-svg' | 'show-formula';
+export interface Lesson {
+  id: string;
+  title: string;
+  slides: Slide[];
+  duration: number;
+}
 
 export interface Slide {
   id: string;
+  type: "content" | "quiz" | "interactive";
+  title: string;
   content: string;
-  voiceoverText: string;
-  voiceoverAudioUrl?: string; 
-  animationType: AnimationType;
-  durationInSeconds: number;
-}
-
-export interface Lesson {
-  topic: string;
-  slides: Slide[];
+  audioUrl?: string;
 }
