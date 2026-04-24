@@ -4,9 +4,12 @@
 import { usePlayerStore } from '@/store/usePlayerStore';
 
 export default function PlayerControls() {
-  const { isPlaying, play, pause, nextSlide, prevSlide, currentLesson } = usePlayerStore();
+  const { isPlaying, togglePlay, currentSlide, setSlide, lessonId } = usePlayerStore();
 
-  if (!currentLesson) return null;
+  if (!lessonId) return null;
+
+  const prevSlide = () => setSlide(Math.max(0, currentSlide - 1));
+  const nextSlide = () => setSlide(currentSlide + 1);
 
   return (
     <div className="flex gap-4 items-center p-4 bg-gray-100 rounded-lg shadow-md mt-4">
@@ -18,7 +21,7 @@ export default function PlayerControls() {
       </button>
       
       <button 
-        onClick={isPlaying ? pause : play}
+        onClick={togglePlay}
         className="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700"
       >
         {isPlaying ? 'Pauza ⏸' : 'Odtwórz ▶️'}
