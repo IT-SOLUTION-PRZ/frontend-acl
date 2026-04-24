@@ -28,6 +28,13 @@ export default function RootLayout({
       lang="en"
       className={`${baloo.variable} ${comicNeue.variable} h-full antialiased`}
     >
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-full flex flex-col font-baloo bg-[#F5F3FF] text-[#1E1B4B]">
         {children}
       </body>

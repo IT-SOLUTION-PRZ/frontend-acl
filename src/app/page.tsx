@@ -1,7 +1,7 @@
 import { Search, Compass, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
-import { LessonCard } from "@/components/home/LessonCard";
+import { ExploreSection } from "@/components/home/ExploreSection";
 
 export default function Home() {
   return (
@@ -30,47 +30,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Catalogue Section */}
-          <div className="mt-16">
-            <div className="flex justify-between items-end mb-8">
-              <h3 className="text-3xl font-bold text-indigo-900 flex items-center gap-2">
-                <Compass className="text-emerald-500 w-8 h-8" />
-                Explore Lessons
-              </h3>
-              <div className="flex gap-2">
-                <button className="clay-btn-secondary px-4 py-2 text-sm">Science</button>
-                <button className="clay-btn-secondary px-4 py-2 text-sm">Math</button>
-                <button className="clay-btn-secondary px-4 py-2 text-sm">History</button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <LessonCard
-                id="plants"
-                title="How do plants eat?"
-                description="A fun animated story about photosynthesis and how the sun helps plants grow big and strong!"
-                category="Science"
-                duration="2:30"
-                colorScheme="indigo"
-              />
-              <LessonCard
-                id="fractions"
-                title="Fractions with Pizza"
-                description="Learn about halves and quarters by slicing up a delicious virtual pizza."
-                category="Math"
-                duration="3:15"
-                colorScheme="rose"
-              />
-              <LessonCard
-                id="pyramids"
-                title="Who built the pyramids?"
-                description="Travel back in time to Ancient Egypt and see how the great pyramids were constructed."
-                category="History"
-                duration="4:00"
-                colorScheme="amber"
-              />
-            </div>
-          </div>
+          {/* Catalogue Section (Using our new component with custom hook) */}
+          <ExploreSection />
 
           {/* Call to action */}
           <div className="mt-16 bg-indigo-50 rounded-3xl p-10 text-center clay-card border-4 border-indigo-100">

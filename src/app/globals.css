@@ -181,6 +181,31 @@
           inset -4px -4px 10px rgba(255, 255, 255, 0.1);
       color: white;
   }
+
+
+  /* Lesson Player — main SVG fills the container */
+  .lesson-player-view > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Normalize box-model and line-height inside SVG foreignObject content */
+  .lesson-player-view foreignObject div,
+  .lesson-player-view foreignObject span,
+  .lesson-player-view foreignObject h2 {
+    box-sizing: border-box;
+    line-height: normal;
+  }
+
+  /* KaTeX math rendering overrides */
+  .lesson-player-view .katex-display {
+    margin: 0.1em 0 !important;
+  }
+
+  .lesson-player-view .katex {
+    font-size: inherit;
+  }
 }
 
 @layer utilities {
