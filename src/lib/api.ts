@@ -1,20 +1,18 @@
 // src/lib/api.ts
-import { Lesson } from '../types/lesson';
+import type { Lesson } from "@/types/lesson";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
-export async function generateLesson(topic: string): Promise<Lesson> {
-  const response = await fetch(`${API_URL}/api/generate-lesson`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ topic }),
+export async function getLesson(id: string): Promise<Lesson> {
+  const res = await fetch(`${BASE_URL}/lessons/${id}`, {
+    next: { revalidate: 60 },
   });
+  if (!res.ok) throw new Error(`Failed to fetch lesson ${id}`);
+  return res.json();
+}
 
-  if (!response.ok) {
-    throw new Error('Nie udało się wygenerować lekcji');
-  }
-
-  return response.json();
+export async function getLessons(): Promise<Lesson[]> {
+  const res = await fetch(`${BASE_URL}/lessons`);
+  if (!res.ok) throw new Error("Failed to fetch lessons");
+  return res.json();
 }

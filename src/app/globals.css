@@ -1,3 +1,201 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-baloo: var(--font-baloo), cursive;
+  --font-comic: var(--font-comic-neue), cursive;
+}
+
+@layer base {
+  body {
+    @apply font-baloo bg-[#F5F3FF] text-[#1E1B4B];
+  }
+}
+
+@layer components {
+  /* Claymorphism Cards */
+  .clay-card {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 3px solid #E0E7FF;
+      box-shadow: 
+          8px 8px 16px rgba(163, 177, 198, 0.3), 
+          -8px -8px 16px rgba(255, 255, 255, 0.8),
+          inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+          inset -2px -2px 4px rgba(163, 177, 198, 0.1);
+  }
+
+  /* Claymorphism Primary Button */
+  .clay-btn-primary {
+      background: #6366F1;
+      border-radius: 20px;
+      border: 3px solid #818CF8;
+      color: white;
+      font-weight: 600;
+      box-shadow: 
+          4px 4px 10px rgba(99, 102, 241, 0.4),
+          -2px -2px 8px rgba(255, 255, 255, 0.5),
+          inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+          inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease-out;
+      cursor: pointer;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  }
+
+  .clay-btn-primary:hover {
+      background: #4F46E5;
+      transform: translateY(-2px);
+  }
+
+  .clay-btn-primary:active {
+      transform: scale(0.95);
+      box-shadow: 
+          inset 4px 4px 8px rgba(0,0,0,0.2),
+          inset -4px -4px 8px rgba(255,255,255,0.2);
+  }
+
+  /* Claymorphism CTA Button (Green) */
+  .clay-btn-cta {
+      background: #10B981;
+      border-radius: 20px;
+      border: 3px solid #34D399;
+      color: white;
+      font-weight: 600;
+      box-shadow: 
+          4px 4px 10px rgba(16, 185, 129, 0.4),
+          -2px -2px 8px rgba(255, 255, 255, 0.5),
+          inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+          inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease-out;
+      cursor: pointer;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  }
+
+  .clay-btn-cta:hover {
+      background: #059669;
+      transform: translateY(-2px);
+  }
+
+  .clay-btn-cta:active {
+      transform: scale(0.95);
+      box-shadow: 
+          inset 4px 4px 8px rgba(0,0,0,0.2),
+          inset -4px -4px 8px rgba(255,255,255,0.2);
+  }
+
+  /* Claymorphism Secondary Button (White/Light) */
+  .clay-btn-secondary {
+      background: #F8FAFC;
+      border-radius: 20px;
+      border: 3px solid #E2E8F0;
+      color: #475569;
+      font-weight: 600;
+      box-shadow: 
+          4px 4px 10px rgba(163, 177, 198, 0.3),
+          -2px -2px 8px rgba(255, 255, 255, 0.8),
+          inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+          inset -2px -2px 4px rgba(163, 177, 198, 0.1);
+      transition: all 0.2s ease-out;
+      cursor: pointer;
+  }
+
+  .clay-btn-secondary:hover {
+      background: #F1F5F9;
+      transform: translateY(-2px);
+  }
+
+  .clay-btn-secondary:active {
+      transform: scale(0.95);
+      box-shadow: 
+          inset 4px 4px 8px rgba(163, 177, 198, 0.2),
+          inset -4px -4px 8px rgba(255,255,255,0.6);
+  }
+
+  /* Claymorphism Input */
+  .clay-input {
+      background: #F8FAFC;
+      border-radius: 20px;
+      border: 3px solid #E2E8F0;
+      color: #1E1B4B;
+      box-shadow: 
+          inset 4px 4px 8px rgba(163, 177, 198, 0.2),
+          inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+      transition: all 0.2s ease-out;
+  }
+
+  .clay-input:focus {
+      outline: none;
+      border-color: #818CF8;
+      background: #FFFFFF;
+  }
+
+  /* Custom Progress Bar */
+  .progress-container {
+      background: #E0E7FF;
+      border-radius: 9999px;
+      box-shadow: inset 2px 2px 6px rgba(163, 177, 198, 0.4), inset -2px -2px 6px rgba(255,255,255,0.8);
+      overflow: hidden;
+      position: relative;
+      border: 2px solid #C7D2FE;
+  }
+
+  .progress-bar {
+      background: linear-gradient(90deg, #10B981, #34D399);
+      height: 100%;
+      border-radius: 9999px;
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: inset 0px 4px 6px rgba(255,255,255,0.4);
+      position: relative;
+  }
+
+  .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(
+          45deg,
+          rgba(255,255,255,0.2) 25%,
+          transparent 25%,
+          transparent 50%,
+          rgba(255,255,255,0.2) 50%,
+          rgba(255,255,255,0.2) 75%,
+          transparent 75%,
+          transparent
+      );
+      background-size: 20px 20px;
+      animation: stripes 1s linear infinite;
+  }
+
+  /* Blackboard */
+  .clay-blackboard {
+      background: #1E293B;
+      border-radius: 24px;
+      border: 6px solid #475569;
+      box-shadow: 
+          8px 8px 16px rgba(163, 177, 198, 0.4), 
+          -8px -8px 16px rgba(255, 255, 255, 0.8),
+          inset 4px 4px 10px rgba(0, 0, 0, 0.5),
+          inset -4px -4px 10px rgba(255, 255, 255, 0.1);
+      color: white;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+  }
+
+  @keyframes stripes {
+      0% { background-position: 0 0; }
+      100% { background-position: 20px 0; }
+  }
+}
