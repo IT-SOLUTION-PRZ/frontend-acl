@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
-import { Baloo_2, Comic_Neue } from "next/font/google";
+import { Baloo_2, Comic_Neue, Geist } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/providers/AuthProvider";
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const baloo = Baloo_2({
   variable: "--font-baloo",
@@ -26,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${baloo.variable} ${comicNeue.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", baloo.variable, comicNeue.variable, "font-sans", geist.variable)}
     >
       <head>
         <link
@@ -36,7 +41,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-baloo bg-[#F5F3FF] text-[#1E1B4B]">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );
