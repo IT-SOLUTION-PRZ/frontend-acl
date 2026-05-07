@@ -1,24 +1,47 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Sparkles, Home, FolderHeart, Settings, LogOut } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/store/authStore";
 
 export function Sidebar() {
+  const router = useRouter();
+  const { user, clearUser } = useAuthStore();
+
+  const displayName = user?.user_metadata?.full_name
+    ?? user?.email?.split("@")[0]
+    ?? "User";
+
+  const avatarSeed = encodeURIComponent(displayName);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    clearUser();
+    toast.success("Logged out successfully");
+    router.push("/login");
+  };
+
   return (
     <aside className="w-full md:w-64 bg-white/80 backdrop-blur-sm border-b-2 md:border-b-0 md:border-r-2 border-indigo-100 flex flex-col p-4 md:p-6 sticky top-0 z-50 md:h-screen shrink-0">
       <div className="flex items-center justify-between md:mb-10">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center border-2 border-indigo-200 shrink-0">
             <Sparkles className="text-indigo-500 w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold text-indigo-900 tracking-wide hidden md:block">
             EduAI
           </h1>
-        </div>
+        </Link>
 
         {/* Mobile user profile */}
         <div className="flex md:hidden items-center gap-3">
-          <p className="font-bold text-indigo-900 text-sm">Alex</p>
+          <p className="font-bold text-indigo-900 text-sm">{displayName}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=b6e3f4"
+            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}&backgroundColor=b6e3f4`}
             alt="User Avatar"
             className="w-10 h-10 rounded-full border-2 border-emerald-300"
           />
@@ -47,25 +70,34 @@ export function Sidebar() {
           <Settings className="w-5 h-5 shrink-0" />{" "}
           <span className="hidden md:inline">Settings</span>
         </Link>
-        <Link
-          href="/"
+
+        {/* Mobile logout button */}
+        <button
+          onClick={handleLogout}
           className="flex md:hidden items-center justify-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-50 hover:text-rose-500 rounded-xl font-semibold transition-colors whitespace-nowrap flex-1"
+          aria-label="Log out"
         >
           <LogOut className="w-5 h-5 shrink-0" />
-        </Link>
+        </button>
       </nav>
 
+      {/* Desktop user profile + logout */}
       <div className="hidden md:flex mt-auto pt-6 border-t-2 border-slate-100 items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=b6e3f4"
+          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}&backgroundColor=b6e3f4`}
           alt="User Avatar"
-          className="w-10 h-10 rounded-full border-2 border-emerald-300"
+          className="w-10 h-10 rounded-full border-2 border-emerald-300 shrink-0"
         />
-        <div>
-          <p className="font-bold text-indigo-900 text-sm">Alex</p>
-          <Link href="/" className="text-xs text-slate-500 hover:text-rose-500">
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-indigo-900 text-sm truncate">{displayName}</p>
+          <button
+            onClick={handleLogout}
+            className="text-xs text-slate-500 hover:text-rose-500 transition-colors flex items-center gap-1 mt-0.5"
+          >
+            <LogOut className="w-3 h-3" />
             Log out
-          </Link>
+          </button>
         </div>
       </div>
     </aside>

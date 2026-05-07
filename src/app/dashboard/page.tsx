@@ -3,6 +3,7 @@
 import { Clock, Play, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useLessonGenerator } from "@/hooks/useLessonGenerator";
+import { useAuthStore } from "@/store/authStore";
 
 export default function DashboardPage() {
   const {
@@ -14,11 +15,16 @@ export default function DashboardPage() {
     startGeneration,
   } = useLessonGenerator();
 
+  const { user } = useAuthStore();
+  const displayName = user?.user_metadata?.full_name
+    ?? user?.email?.split("@")[0]
+    ?? "there";
+
   return (
     <main className="flex-grow p-4 md:p-8 max-w-5xl mx-auto space-y-6 md:space-y-8 w-full">
       <div className="flex justify-between items-center mb-4 md:mb-8 mt-2 md:mt-0">
         <h2 className="text-2xl md:text-3xl font-bold text-indigo-900">
-          👋 Welcome back, Alex!
+          👋 Welcome back, {displayName}!
         </h2>
       </div>
 
