@@ -6,15 +6,15 @@ import { Sparkles, Home, FolderHeart, Settings, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";
+import { useDashboardTab, type DashboardTab } from "@/hooks/useDashboardTab";
+import { getDisplayName } from "@/lib/utils";
 
 export function Sidebar() {
   const router = useRouter();
+  const activeTab = useDashboardTab();
   const { user, clearUser } = useAuthStore();
 
-  const displayName = user?.user_metadata?.full_name
-    ?? user?.email?.split("@")[0]
-    ?? "User";
-
+  const displayName = getDisplayName(user, "User");
   const avatarSeed = encodeURIComponent(displayName);
 
   const handleLogout = async () => {
@@ -22,6 +22,13 @@ export function Sidebar() {
     clearUser();
     toast.success("Logged out successfully");
     router.push("/login");
+  };
+
+  const getLinkClass = (tabName: DashboardTab) => {
+    const base = "flex items-center justify-center md:justify-start gap-3 px-4 py-3 rounded-xl whitespace-nowrap flex-1 md:flex-none";
+    return activeTab === tabName
+      ? `${base} bg-indigo-50 text-indigo-700 font-bold border-2 border-indigo-200 transition-all`
+      : `${base} text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-semibold border-2 border-transparent transition-colors`;
   };
 
   return (
@@ -49,24 +56,15 @@ export function Sidebar() {
       </div>
 
       <nav className="flex md:flex-col gap-2 overflow-x-auto mt-4 md:mt-0 md:space-y-3 flex-grow pb-2 md:pb-0 hide-scrollbar">
-        <Link
-          href="/dashboard"
-          className="flex items-center justify-center md:justify-start gap-3 px-4 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold border-2 border-indigo-200 whitespace-nowrap flex-1 md:flex-none"
-        >
+        <Link href="/dashboard" className={getLinkClass("dashboard")}>
           <Home className="w-5 h-5 shrink-0" />{" "}
           <span className="hidden md:inline">Dashboard</span>
         </Link>
-        <Link
-          href="#"
-          className="flex items-center justify-center md:justify-start gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 rounded-xl font-semibold transition-colors whitespace-nowrap flex-1 md:flex-none"
-        >
+        <Link href="/dashboard?tab=lessons" className={getLinkClass("lessons")}>
           <FolderHeart className="w-5 h-5 shrink-0" />{" "}
           <span className="hidden md:inline">My Lessons</span>
         </Link>
-        <Link
-          href="#"
-          className="flex items-center justify-center md:justify-start gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 rounded-xl font-semibold transition-colors whitespace-nowrap flex-1 md:flex-none"
-        >
+        <Link href="/dashboard?tab=settings" className={getLinkClass("settings")}>
           <Settings className="w-5 h-5 shrink-0" />{" "}
           <span className="hidden md:inline">Settings</span>
         </Link>

@@ -1,5 +1,4 @@
 
-import type { Lesson } from "@/types/lesson";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -22,3 +21,36 @@ export async function getLessons(): Promise<any> {
   const data = await res.json();
   return data.items || [];
 }
+
+export async function updateInterests(userId: string, interests: string[]): Promise<any> {
+  // Use the root /api path since the backend route is just /update-interests and mounted on /api
+  const url = BASE_URL.replace('/v1', '') + '/update-interests';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, interests })
+  });
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Failed to update interests");
+  }
+  
+  return res.json();
+}
+
+export async function generateLesson(topic: string, userId?: string): Promise<any> {
+  const url = BASE_URL.replace('/v1', '') + '/generate-lesson';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic, user_id: userId })
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Failed to generate lesson");
+  }
+
+  return res.json();
+}
