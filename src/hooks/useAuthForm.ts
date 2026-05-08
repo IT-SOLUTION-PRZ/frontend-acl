@@ -51,7 +51,11 @@ export function useAuthForm() {
   // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace("/dashboard");
+      if (!user.user_metadata?.onboarding_completed) {
+        router.replace("/onboarding");
+      } else {
+        router.replace("/dashboard");
+      }
     }
   }, [user, isLoading, router]);
 
@@ -84,7 +88,7 @@ export function useAuthForm() {
       });
       if (error) throw error;
       toast.success("Welcome back! 🎉");
-      router.push("/dashboard");
+      // redirection is handled by useEffect
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       toast.error(message);
@@ -105,7 +109,7 @@ export function useAuthForm() {
       });
       if (error) throw error;
       toast.success("Account created! Welcome to EduAI 🚀");
-      router.push("/dashboard");
+      // redirection is handled by useEffect
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       toast.error(message);

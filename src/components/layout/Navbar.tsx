@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { getDisplayName } from "@/lib/utils";
 
 export function Navbar() {
   const { user } = useAuthStore();
   
-  const displayName = user?.user_metadata?.full_name
-    ?? user?.email?.split("@")[0]
-    ?? "User";
-
+  const displayName = getDisplayName(user, "User");
   const avatarSeed = encodeURIComponent(displayName);
 
   return (
