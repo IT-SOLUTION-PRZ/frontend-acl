@@ -1,16 +1,39 @@
+"use client";
+
+import { useEffect, useState, use } from "react";
 import { ArrowLeft, Sparkles, Download, Globe } from "lucide-react";
 import Link from "next/link";
 import { LessonPlayer } from "@/components/player/LessonPlayer";
 import { getLesson } from "@/lib/api";
+import { useGeneratedLessonStore } from "@/store/generatedLessonStore";
 
-export default async function LessonPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  let lessonData = null;
-  try {
-    lessonData = await getLesson(id);
-  } catch (error) {
-    console.error(error);
-  }
+export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const [lessonData, setLessonData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const { lessonData: generatedLesson } = useGeneratedLessonStore();
+
+  useEffect(() => {
+    async function fetchLesson() {
+      if (id === "new" && generatedLesson) {
+        setLessonData(generatedLesson);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getLesson(id);
+        setLessonData(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchLesson();
+  }, [id, generatedLesson]);
 
   return (
     <div className="min-h-screen bg-[#F5F3FF] flex flex-col">
@@ -48,13 +71,18 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
       </nav>
 
       <main className="flex-grow flex flex-col justify-center p-4 md:p-6 max-w-7xl mx-auto w-full">
-        {lessonData ? (
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="mt-4 text-indigo-900 font-bold">Loading lesson...</p>
+          </div>
+        ) : lessonData ? (
           <LessonPlayer lessonData={lessonData} />
         ) : (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold text-rose-500 mb-4">Lesson not found</h2>
             <p className="text-slate-500 font-comic">Make sure the backend API is running and this lesson exists.</p>
-            <Link href="/" className="clay-btn-secondary inline-block mt-8 px-6 py-3">
+            <Link href="/dashboard" className="clay-btn-secondary inline-block mt-8 px-6 py-3">
               Go back home
             </Link>
           </div>
