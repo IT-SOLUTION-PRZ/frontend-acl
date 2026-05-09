@@ -10,7 +10,7 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({ displayName, email }: SettingsTabProps) {
-  const { initialInterests, isSaving, saveInterests } = useInterests();
+  const { initialInterests, isLoadingInterests, isSaving, saveInterests } = useInterests();
 
   const handleSave = async (interests: string[]) => {
     await saveInterests(interests);
@@ -44,11 +44,17 @@ export function SettingsTab({ displayName, email }: SettingsTabProps) {
             Update your interests to get better personalized lesson suggestions.
           </p>
           
-          <InterestsPicker
-            initialInterests={initialInterests}
-            onSave={handleSave}
-            isLoading={isSaving}
-          />
+          {isLoadingInterests ? (
+            <div className="min-h-[160px] flex items-center text-slate-500 font-comic">
+              Loading interests...
+            </div>
+          ) : (
+            <InterestsPicker
+              initialInterests={initialInterests}
+              onSave={handleSave}
+              isLoading={isSaving}
+            />
+          )}
         </div>
       </div>
     </div>
