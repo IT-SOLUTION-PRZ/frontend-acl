@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { updateInterests } from "@/lib/api";
+import { getInterests, updateInterests } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -11,28 +11,63 @@ import { toast } from "sonner";
  * Used by both the Onboarding page and the Settings tab.
  */
 export function useInterests() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingInterests, setIsLoadingInterests] = useState(false);
+  const [interests, setInterests] = useState<string[]>([]);
 
-  const initialInterests: string[] = user?.user_metadata?.interests || [];
+  useEffect(() => {
+    const metadataInterests: string[] = user?.user_metadata?.interests || [];
+    setInterests(metadataInterests);
+    setIsLoadingInterests(Boolean(user));
+
+    if (!user) {
+      setIsLoadingInterests(false);
+      return;
+    }
+
+    let isCurrent = true;
+    getInterests()
+      .then((savedInterests) => {
+        if (!isCurrent) return;
+
+        setInterests(
+          savedInterests.length > 0 || metadataInterests.length === 0
+            ? savedInterests
+            : metadataInterests
+        );
+      })
+      .catch(() => {
+        if (isCurrent) setInterests(metadataInterests);
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoadingInterests(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [user]);
 
   const saveInterests = async (
-    interests: string[],
+    nextInterests: string[],
     options?: { markOnboardingComplete?: boolean }
   ) => {
     if (!user) return;
     setIsSaving(true);
 
     try {
-      await updateInterests(interests);
+      await updateInterests(nextInterests);
 
-      const metadata: Record<string, unknown> = { interests };
+      const metadata: Record<string, unknown> = { interests: nextInterests };
       if (options?.markOnboardingComplete) {
         metadata.onboarding_completed = true;
       }
 
-      const { error } = await supabase.auth.updateUser({ data: metadata });
+      const { data, error } = await supabase.auth.updateUser({ data: metadata });
       if (error) throw error;
+      if (data.user) setUser(data.user);
+      setInterests(nextInterests);
 
       toast.success(
         options?.markOnboardingComplete
@@ -48,5 +83,5 @@ export function useInterests() {
     }
   };
 
-  return { initialInterests, isSaving, saveInterests };
+  return { initialInterests: interests, isLoadingInterests, isSaving, saveInterests };
 }

@@ -10,6 +10,10 @@ interface InterestsPickerProps {
   isLoading?: boolean;
 }
 
+function areInterestsEqual(first: string[], second: string[]) {
+  return first.length === second.length && first.every((item, index) => item === second[index]);
+}
+
 export function InterestsPicker({
   initialInterests = [],
   onSave,
@@ -17,7 +21,13 @@ export function InterestsPicker({
   isLoading = false,
 }: InterestsPickerProps) {
   const [interests, setInterests] = useState<string[]>(initialInterests);
+  const [previousInitialInterests, setPreviousInitialInterests] = useState<string[]>(initialInterests);
   const [inputValue, setInputValue] = useState("");
+
+  if (!areInterestsEqual(previousInitialInterests, initialInterests)) {
+    setPreviousInitialInterests(initialInterests);
+    setInterests(initialInterests);
+  }
 
   const handleAdd = () => {
     const val = inputValue.trim();

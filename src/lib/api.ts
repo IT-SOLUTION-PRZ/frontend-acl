@@ -100,6 +100,17 @@ export async function updateInterests(interests: string[]): Promise<{ message: s
   return res.json();
 }
 
+export async function getInterests(): Promise<string[]> {
+  const res = await fetch(`${API_ROOT}/interests`, {
+    headers: await getAuthHeaders(),
+    cache: "no-store",
+  });
+
+  if (!res.ok) throw await readError(res, "Failed to fetch interests");
+  const data = await res.json();
+  return isRecord(data) && Array.isArray(data.interests) ? data.interests : [];
+}
+
 export async function generateLesson(topic: string): Promise<SavedLesson> {
   const res = await fetch(`${API_ROOT}/generate-lesson`, {
     method: "POST",
