@@ -24,9 +24,7 @@ export function useInterests() {
     setIsSaving(true);
 
     try {
-      if (interests.length > 0) {
-        await updateInterests(user.id, interests);
-      }
+      await updateInterests(interests);
 
       const metadata: Record<string, unknown> = { interests };
       if (options?.markOnboardingComplete) {

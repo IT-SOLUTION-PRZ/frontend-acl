@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { generateLesson } from "@/lib/api";
-import { useAuthStore } from "@/store/authStore";
 import { useGeneratedLessonStore } from "@/store/generatedLessonStore";
 import { toast } from "sonner";
 
@@ -16,7 +15,6 @@ const PROGRESS_MESSAGES = [
 
 export function useLessonGenerator() {
   const router = useRouter();
-  const { user } = useAuthStore();
   const { setLessonData } = useGeneratedLessonStore();
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -49,9 +47,7 @@ export function useLessonGenerator() {
     }, 800);
 
     try {
-      // Call the real backend API
-      // The backend will automatically fetch user interests using user.id
-      const data = await generateLesson(prompt, user?.id);
+      const data = await generateLesson(prompt);
       
       // Store the generated lesson data globally
       setLessonData(data);
@@ -62,11 +58,12 @@ export function useLessonGenerator() {
       
       // Small delay for UI smoothness
       setTimeout(() => {
-        router.push("/lesson/new");
+        router.push(`/lesson/${data.id}`);
       }, 500);
       
-    } catch (error: any) {
-      toast.error(error.message || "Failed to generate lesson. The topic might be invalid.");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to generate lesson. The topic might be invalid.";
+      toast.error(message);
       setIsGenerating(false);
       setProgress(0);
     } finally {
