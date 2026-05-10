@@ -15,13 +15,11 @@ export function useLessonPlayer(lessonData: any) {
   const [sceneTitle, setSceneTitle] = useState("");
 
   const tlRef = useRef<gsap.core.Timeline | null>(null);
-  const synthRef = useRef<SpeechSynthesis | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const timelineFinishedRef = useRef(false);
   const speechFinishedRef = useRef(false);
 
-  // Mirror state values in refs for use inside GSAP/SpeechSynthesis callbacks
   const currentIdxRef = useRef(currentIdx);
   currentIdxRef.current = currentIdx;
 
@@ -36,97 +34,95 @@ export function useLessonPlayer(lessonData: any) {
 
   const totalScenes = lessonData?.scenes?.length || 0;
 
-  // Initialize SpeechSynthesis on client side only
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      synthRef.current = window.speechSynthesis;
-      synthRef.current.cancel();
-      return () => {
-        if (synthRef.current) synthRef.current.cancel();
-        if (tlRef.current) tlRef.current.kill();
-      };
-    }
-  }, []);
-
-  // ---- Core engine functions ----
-
-  const speakText = useCallback((text: string) => {
-    speechFinishedRef.current = false;
-    if (synthRef.current) synthRef.current.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "pl-PL";
-    utterance.rate = 1.0;
-
-    utterance.onend = () => {
-      speechFinishedRef.current = true;
-      tryAdvanceScene();
-    };
-
-    utterance.onerror = () => {
-      speechFinishedRef.current = true;
-      tryAdvanceScene();
-    };
-
-    utteranceRef.current = utterance;
-    if (synthRef.current) synthRef.current.speak(utterance);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // --- LOGIKA PRZEWIJANIA ---
   const tryAdvanceScene = useCallback(() => {
-    if (!timelineFinishedRef.current || !speechFinishedRef.current) return;
-    if (!lessonData?.scenes) return;
+    // Jeśli animacja lub dźwięk jeszcze trwają - nie rób nic
+    if (!timelineFinishedRef.current || !speechFinishedRef.current) {
+      console.log("Czekam na:", { 
+        animacja: timelineFinishedRef.current, 
+        dzwiek: speechFinishedRef.current 
+      });
+      return;
+    }
 
     const idx = currentIdxRef.current;
-    if (idx < lessonData.scenes.length - 1) {
+    if (idx < (lessonData?.scenes?.length || 0) - 1) {
+      console.log("Przełączam na slajd:", idx + 1);
       setCurrentIdx(idx + 1);
     } else {
-      // Lesson finished
+      console.log("Koniec lekcji");
       setIsPlaying(false);
       setIsStarted(false);
     }
   }, [lessonData]);
+
+  // --- LOGIKA AUDIO ---
+  const playAudio = useCallback((url: string) => {
+    speechFinishedRef.current = false;
+    
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.muted = !speechEnabledRef.current;
+
+    audio.onended = () => {
+      console.log("Dźwięk zakończony");
+      speechFinishedRef.current = true;
+      tryAdvanceScene();
+    };
+
+    audio.onerror = () => {
+      console.error("Błąd pliku audio, pomijam...");
+      speechFinishedRef.current = true;
+      tryAdvanceScene();
+    };
+
+    audio.play().catch(e => {
+      console.warn("Blokada autoodtwarzania audio, kliknij Play.");
+      // Jeśli przeglądarka blokuje dźwięk, nie możemy zablokować lekcji
+      // ale pozwalamy użytkownikowi kliknąć Play później
+    });
+  }, [tryAdvanceScene]);
 
   const renderScene = useCallback(
     (index: number, autoPlay: boolean) => {
       if (!lessonData?.scenes?.[index] || !containerRef.current) return;
       const scene = lessonData.scenes[index];
 
-      // Reset transition flags
+      // Resetujemy flagi przed nowym slajdem
       timelineFinishedRef.current = false;
-      speechFinishedRef.current =
-        !speechEnabledRef.current || !scene.speechText;
+      
+      // Jeśli dźwięk jest wyłączony lub go nie ma - uznajemy go za zakończony od razu
+      speechFinishedRef.current = !autoPlay || !speechEnabledRef.current || !scene.audioUrl;
 
-      // Stop previous speech & animations
-      if (synthRef.current) synthRef.current.cancel();
+      // Sprzątanie po poprzednim slajdzie
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (tlRef.current) tlRef.current.kill();
       if (containerRef.current) {
         gsap.killTweensOf(containerRef.current.querySelectorAll("*"));
       }
-      if (tlRef.current) tlRef.current.kill();
 
-      // Inject SVG
+      // Wstrzyknięcie SVG
       containerRef.current.innerHTML = scene.svgCode;
 
-      // Render math with KaTeX
-      const mathElements =
-        containerRef.current.querySelectorAll(".math-tex");
+      // KaTeX
+      const mathElements = containerRef.current.querySelectorAll(".math-tex");
       mathElements.forEach((el) => {
         let formulaText = el.textContent || "";
-        formulaText = formulaText.replace(
-          /(?:\\+|\b)(sqrt|frac|circ|cdot|times|div|pm|mp|int|sum|prod|alpha|beta|gamma|delta|Delta|pi|theta|infty|approx|leq|geq|neq|sin|cos|tan|text|vec|xrightarrow)\b/g,
-          "\\$1"
-        );
+        formulaText = formulaText.replace(/(?:\\+|\b)(sqrt|frac|circ|cdot|times|div|pm|mp|int|sum|prod|alpha|beta|gamma|delta|Delta|pi|theta|infty|approx|leq|geq|neq|sin|cos|tan|text|vec|xrightarrow)\b/g, "\\$1");
         try {
-          katex.render(formulaText, el as HTMLElement, {
-            throwOnError: false,
-            displayMode: true,
-          });
-        } catch {
-          // Silently ignore rendering errors
-        }
+          katex.render(formulaText, el as HTMLElement, { throwOnError: false, displayMode: true });
+        } catch (e) {}
       });
 
-      // Build GSAP timeline
+      // Animacje GSAP
       const tl = gsap.timeline({
         paused: !autoPlay,
         onUpdate: () => {
@@ -137,128 +133,102 @@ export function useLessonPlayer(lessonData: any) {
           }
         },
         onComplete: () => {
+          console.log("Animacja zakończona");
           timelineFinishedRef.current = true;
           tryAdvanceScene();
         },
       });
 
       tlRef.current = tl;
+      tl.to({}, { duration: scene.duration || 5 }); // Minimalny czas trwania slajdu
 
-      // Base duration tween for the scene timeline
-      tl.to({}, { duration: scene.duration });
-
-      // Add animations
       scene.animations?.forEach((anim: any) => {
         if (!containerRef.current) return;
         const targets = containerRef.current.querySelectorAll(anim.target);
-        if (targets.length === 0) return;
-
-        if (anim.type === "timeline") {
-          tl.to(targets, anim.props, anim.start || 0);
-        } else if (anim.type === "loop") {
-          gsap.to(targets, { ...anim.props, repeat: -1 });
+        if (targets.length > 0) {
+          if (anim.type === "timeline") {
+            tl.to(targets, anim.props, anim.start || 0);
+          } else if (anim.type === "loop") {
+            gsap.to(targets, { ...anim.props, repeat: -1 });
+          }
         }
       });
 
-      // Start speech if autoPlay
-      if (autoPlay && speechEnabledRef.current && scene.speechText) {
-        speakText(scene.speechText);
+      // Start dźwięku
+      if (autoPlay && scene.audioUrl && speechEnabledRef.current) {
+        playAudio(scene.audioUrl);
       }
     },
-    [lessonData, speakText, tryAdvanceScene]
+    [lessonData, playAudio, tryAdvanceScene]
   );
 
-  // Re-render scene when currentIdx or lessonData changes
   useEffect(() => {
     if (!lessonData?.scenes?.length) return;
     renderScene(currentIdx, isStartedRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIdx, lessonData]);
+  }, [currentIdx, lessonData, renderScene]);
 
-  // Reset when lessonData changes
   useEffect(() => {
     if (lessonData?.scenes?.length) {
       setCurrentIdx(0);
       setSceneTitle(lessonData.lessonTitle || "Lekcja");
       setIsStarted(false);
       setIsPlaying(false);
-      setProgress(0);
-      setCurrentTime(0);
-      setTotalTime(0);
     }
   }, [lessonData]);
-
-  // ---- Public actions ----
 
   const togglePlay = useCallback(() => {
     if (!tlRef.current || !lessonData) return;
 
     if (!isStartedRef.current) {
-      // First start or replay
       setIsStarted(true);
       setIsPlaying(true);
-
-      if (
-        currentIdxRef.current >= lessonData.scenes.length - 1 &&
-        timelineFinishedRef.current
-      ) {
-        // Replay from the beginning
-        setCurrentIdx(0);
-      } else {
-        const scene = lessonData.scenes[currentIdxRef.current];
-        if (speechEnabledRef.current && scene.speechText) {
-          speakText(scene.speechText);
-        }
-        tlRef.current.play();
+      
+      const scene = lessonData.scenes[currentIdxRef.current];
+      if (speechEnabledRef.current && scene.audioUrl) {
+        playAudio(scene.audioUrl);
       }
+      tlRef.current.play();
       return;
     }
 
-    // Toggle pause / resume
     if (tlRef.current.paused()) {
       tlRef.current.play();
-      if (synthRef.current) synthRef.current.resume();
+      if (audioRef.current) audioRef.current.play();
       setIsPlaying(true);
     } else {
       tlRef.current.pause();
-      if (synthRef.current) synthRef.current.pause();
+      if (audioRef.current) audioRef.current.pause();
       setIsPlaying(false);
     }
-  }, [lessonData, speakText]);
+  }, [lessonData, playAudio]);
 
   const toggleSpeech = useCallback(() => {
     const next = !speechEnabledRef.current;
     setSpeechEnabled(next);
-    if (!next) {
-      if (synthRef.current) synthRef.current.cancel();
-      speechFinishedRef.current = true;
-      tryAdvanceScene();
+    if (audioRef.current) audioRef.current.muted = !next;
+    
+    // Jeśli włączamy dźwięk, a slajd już trwa, spróbujmy go odpalić
+    if (next && isPlayingRef.current && audioRef.current?.paused) {
+      audioRef.current.play();
     }
-  }, [tryAdvanceScene]);
+  }, []);
 
   const seek = useCallback((val: number) => {
     if (tlRef.current) {
       tlRef.current.progress(val / 100);
       tlRef.current.pause();
-      if (synthRef.current) synthRef.current.cancel();
-      timelineFinishedRef.current = false;
+      if (audioRef.current) {
+        const target = (val / 100) * (audioRef.current.duration || 0);
+        if (!isNaN(target)) audioRef.current.currentTime = target;
+        audioRef.current.pause();
+      }
       setIsPlaying(false);
     }
   }, []);
 
   return {
-    containerRef,
-    sceneTitle,
-    isStarted,
-    isPlaying,
-    speechEnabled,
-    progress,
-    currentTime,
-    totalTime,
-    currentSceneIdx: currentIdx,
-    totalScenes,
-    togglePlay,
-    toggleSpeech,
-    seek,
+    containerRef, sceneTitle, isStarted, isPlaying, speechEnabled,
+    progress, currentTime, totalTime, currentSceneIdx: currentIdx, 
+    totalScenes, togglePlay, toggleSpeech, seek
   };
 }
